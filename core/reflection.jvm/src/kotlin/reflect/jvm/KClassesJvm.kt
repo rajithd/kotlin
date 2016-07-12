@@ -18,14 +18,24 @@
 package kotlin.reflect.jvm
 
 import kotlin.reflect.KClass
-import kotlin.reflect.jvm.internal.KClassImpl
 
 /**
  * Returns the JVM name of the class represented by this [KClass] instance.
  *
- * @see [java.lang.Class.getName]
+ * @see [Class.getName]
  */
 val KClass<*>.jvmName: String
-    get() {
-        return (this as KClassImpl).jClass.name
-    }
+    get() = java.name
+
+/**
+ * TODO: which class loader exactly?
+ *
+ * Returns the [KClass] instance which has the given JVM name,
+ * or throws an exception if such class does not exist, according to the class loader which loaded the [KClass] interface.
+ *
+ * This function is different from [KClass.byQualifiedName] in that ... TODO
+ *
+ * @see [Class.forName]
+ */
+fun KClass.Companion.byJvmName(jvmName: String): KClass<*> =
+        Class.forName(jvmName, true, KClass::class.java.classLoader).kotlin

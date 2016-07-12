@@ -277,3 +277,18 @@ fun <T : Any> KClass<T>.createInstance(): T {
 
     return noArgsConstructor.callBy(emptyMap())
 }
+
+
+/**
+ * TODO: which class loader exactly?
+ *
+ * Returns the [KClass] instance which has the given qualified name.
+ *
+ * TODO: note about qualified name
+ *
+ * @see [KClass.qualifiedName]
+ */
+fun KClass.Companion.byQualifiedName(qualifiedName: String): KClass<*> {
+    // TODO: map Java names to Kotlin
+    TODO()
+}
