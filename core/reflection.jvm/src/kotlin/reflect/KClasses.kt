@@ -234,3 +234,23 @@ fun KClass<*>.isSubclassOf(base: KClass<*>): Boolean =
  */
 fun KClass<*>.isSuperclassOf(derived: KClass<*>): Boolean =
         derived.isSubclassOf(this)
+
+
+/**
+ * Performs an unchecked cast of the given [value] to this class and either returns the value if the cast is successful,
+ * or throws an exception otherwise.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> KClass<T>.cast(value: Any?): T {
+    if (!isInstance(value)) throw TypeCastException("Value cannot be cast to $qualifiedName")
+    return value as T
+}
+
+/**
+ * Performs an unchecked cast of the given [value] to this class and returns either the value if the cast is successful,
+ * or `null` otherwise.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> KClass<T>.safeCast(value: Any?): T? {
+    return if (isInstance(value)) value as T else null
+}
