@@ -66,9 +66,9 @@ class JeTypeElement(override val psi: PsiClass) : JeElement(), TypeElement, JeAn
     
     fun getAllMembers(): List<Element> {
         val declarations = mutableListOf<Element>()
-        psi.constructors.forEach { declarations += JeMethodExecutableElement(it) }
-        psi.fields.forEach { declarations += JeVariableElement(it) }
-        psi.methods.forEach { declarations += JeMethodExecutableElement(it) }
+        psi.allFields.forEach { declarations += JeVariableElement(it) }
+        psi.allMethods.forEach { declarations += JeMethodExecutableElement(it) }
+        psi.allInnerClasses.forEach { declarations += JeTypeElement(it) }
         return declarations
     }
 
@@ -92,5 +92,5 @@ class JeTypeElement(override val psi: PsiClass) : JeElement(), TypeElement, JeAn
 
     override fun hashCode() = psi.hashCode()
 
-    override fun toString() = psi.qualifiedName ?: psi.superClass?.qualifiedName ?: "<unnamed>"
+    override fun toString() = psi.qualifiedName ?: "<anonymous> extends " + psi.superClass?.qualifiedName ?: "<unnamed>"
 }
