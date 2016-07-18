@@ -12478,6 +12478,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
                     String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/mapping/types/unit.kt");
                     doTest(fileName);
                 }
+
+                @TestMetadata("withNullability.kt")
+                public void testWithNullability() throws Exception {
+                    String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/mapping/types/withNullability.kt");
+                    doTest(fileName);
+                }
             }
         }
 
@@ -13041,6 +13047,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             @TestMetadata("useSiteVariance.kt")
             public void testUseSiteVariance() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/types/useSiteVariance.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("withNullability.kt")
+            public void testWithNullability() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/types/withNullability.kt");
                 doTest(fileName);
             }
 
