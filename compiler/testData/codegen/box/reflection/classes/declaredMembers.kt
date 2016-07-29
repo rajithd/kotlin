@@ -23,13 +23,17 @@ import kotlin.reflect.declaredMembers
 import kotlin.test.assertEquals
 
 open class K : J() {
-    open fun publicK() {}
-    private fun privateK() {}
+    open fun publicKFun() {}
+    private fun privateKFun() {}
+    var publicKProp = Unit
+    private val privateKProp = Unit
 }
 
 class L : K() {
-    fun publicL() {}
-    private fun privateL() {}
+    fun publicLFun() {}
+    private fun privateLFun() {}
+    val publicLProp = Unit
+    private var privateLProp = Unit
 }
 
 inline fun <reified T> test(vararg names: String) {
@@ -39,8 +43,8 @@ inline fun <reified T> test(vararg names: String) {
 fun box(): String {
     test<I>("publicStaticI", "publicMemberI", "privateStaticI", "privateMemberI")
     test<J>("publicStaticJ", "publicMemberJ", "privateStaticJ", "privateMemberJ")
-    test<K>("publicK", "privateK")
-    test<L>("publicL", "privateL")
+    test<K>("publicKFun", "privateKFun", "publicKProp", "privateKProp")
+    test<L>("publicLFun", "privateLFun", "publicLProp", "privateLProp")
 
     return "OK"
 }
