@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.cfg.pseudocode.instructions.eval.AccessValueInstruct
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.eval.ReadValueInstruction;
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.eval.WriteValueInstruction;
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.VariableDeclarationInstruction;
-import org.jetbrains.kotlin.descriptors.VariableDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.diagnostics.Diagnostic;
 import org.jetbrains.kotlin.psi.KtDeclaration;
 import org.jetbrains.kotlin.psi.KtElement;
@@ -88,7 +88,7 @@ public class PseudocodeUtil {
     }
 
     @Nullable
-    public static VariableDescriptor extractVariableDescriptorIfAny(@NotNull Instruction instruction, boolean onlyReference, @NotNull BindingContext bindingContext) {
+    public static DeclarationDescriptor extractVariableDescriptorIfAny(@NotNull Instruction instruction, boolean onlyReference, @NotNull BindingContext bindingContext) {
         KtElement element = null;
         if (instruction instanceof ReadValueInstruction) {
             element = ((ReadValueInstruction) instruction).getElement();

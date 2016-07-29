@@ -217,7 +217,8 @@ class ControlFlowProcessor(private val trace: BindingTrace) {
 
         private fun getDeclarationAccessTarget(element: KtElement): AccessTarget {
             val descriptor = trace.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element)
-            return if (descriptor is VariableDescriptor)
+            return if (descriptor is VariableDescriptor ||
+                       descriptor is ClassDescriptor && descriptor.kind == ClassKind.ENUM_ENTRY)
                 AccessTarget.Declaration(descriptor)
             else
                 AccessTarget.BlackBox
@@ -924,13 +925,19 @@ class ControlFlowProcessor(private val trace: BindingTrace) {
                 generateInstructions(defaultValue)
                 builder.bindLabel(skipDefaultValue)
             }
-            generateInitializer(parameter, computePseudoValueForParameter(parameter))
+            generateInitializer(parameter, computePseudoValueForParameterOrEnumEntry(parameter))
         }
 
-        private fun computePseudoValueForParameter(parameter: KtParameter): PseudoValue {
-            val syntheticValue = createSyntheticValue(parameter, MagicKind.FAKE_INITIALIZER)
-            val defaultValue = builder.getBoundValue(parameter.defaultValue) ?: return syntheticValue
-            return builder.merge(parameter, Lists.newArrayList(defaultValue, syntheticValue)).outputValue
+        private fun computePseudoValueForParameterOrEnumEntry(declaration: KtDeclaration): PseudoValue {
+            val syntheticValue = createSyntheticValue(declaration, MagicKind.FAKE_INITIALIZER)
+            when (declaration) {
+                is KtParameter -> {
+                    val defaultValue = builder.getBoundValue(declaration.defaultValue) ?: return syntheticValue
+                    return builder.merge(declaration, Lists.newArrayList(defaultValue, syntheticValue)).outputValue
+                }
+                is KtEnumEntry -> return syntheticValue
+                else -> throw AssertionError("computePseudoValueFor: ${declaration.text}")
+            }
         }
 
         override fun visitBlockExpression(expression: KtBlockExpression) {
@@ -1258,6 +1265,16 @@ class ControlFlowProcessor(private val trace: BindingTrace) {
         }
 
         override fun visitClass(klass: KtClass) {
+            if (klass.isEnum()) {
+                klass.declarations.filterIsInstance<KtEnumEntry>().forEach {
+                    builder.declareEnumEntry(it)
+                    generateInitializer(it, computePseudoValueForParameterOrEnumEntry(it))
+                    generateInstructions(it)
+                }
+                klass.getCompanionObjects().forEach {
+                    generateInstructions(it)
+                }
+            }
             if (klass.hasPrimaryConstructor()) {
                 processParameters(klass.getPrimaryConstructorParameters())
 

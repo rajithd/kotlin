@@ -57,9 +57,10 @@ public class BindingContextUtils {
     }
 
     @Nullable
-    public static VariableDescriptor extractVariableDescriptorIfAny(@NotNull BindingContext bindingContext, @Nullable KtElement element, boolean onlyReference) {
+    public static DeclarationDescriptor extractVariableDescriptorIfAny(@NotNull BindingContext bindingContext, @Nullable KtElement element, boolean onlyReference) {
         DeclarationDescriptor descriptor = null;
-        if (!onlyReference && (element instanceof KtVariableDeclaration || element instanceof KtParameter)) {
+        if (!onlyReference &&
+            (element instanceof KtVariableDeclaration || element instanceof KtParameter || element instanceof KtEnumEntry)) {
             descriptor = bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element);
         }
         else if (element instanceof KtSimpleNameExpression) {
@@ -68,9 +69,10 @@ public class BindingContextUtils {
         else if (element instanceof KtQualifiedExpression) {
             descriptor = extractVariableDescriptorIfAny(bindingContext, ((KtQualifiedExpression) element).getSelectorExpression(), onlyReference);
         }
-        if (descriptor instanceof VariableDescriptor) {
-            return (VariableDescriptor) descriptor;
-        }
+        if (descriptor instanceof VariableDescriptor)
+            return descriptor;
+        if (descriptor instanceof ClassDescriptor && ((ClassDescriptor) descriptor).getKind() == ClassKind.ENUM_ENTRY)
+            return descriptor;
         return null;
     }
 

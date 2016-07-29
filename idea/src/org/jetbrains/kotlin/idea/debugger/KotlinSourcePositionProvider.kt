@@ -32,6 +32,7 @@ import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.ClassNotPreparedException
 import com.sun.jdi.ReferenceType
 import org.jetbrains.kotlin.codegen.AsmUtil
+import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.debugger.evaluate.KotlinCodeFragmentFactory
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -70,8 +71,9 @@ class KotlinSourcePositionProvider: SourcePositionProvider() {
         val expression = codeFragment.getContentElement()
         if (expression is KtSimpleNameExpression) {
             val bindingContext = expression.analyze(BodyResolveMode.PARTIAL)
-            val declarationDescriptor = BindingContextUtils.extractVariableDescriptorIfAny(bindingContext, expression, false)
-            val sourceElement = declarationDescriptor?.source
+            val variableDescriptor =
+                    BindingContextUtils.extractVariableDescriptorIfAny(bindingContext, expression, false) as? VariableDescriptor
+            val sourceElement = variableDescriptor?.source
             if (sourceElement is KotlinSourceElement) {
                 val element = sourceElement.getPsi() ?: return null
                 if (nearest) {

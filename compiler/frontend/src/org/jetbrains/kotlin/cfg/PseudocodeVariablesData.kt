@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.cfg.pseudocode.instructions.eval.*
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.VariableDeclarationInstruction
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.Edges
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.TraversalOrder
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.util.Collections
@@ -33,7 +33,7 @@ import java.util.Collections
 class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingContext: BindingContext) {
     private val pseudocodeVariableDataCollector: PseudocodeVariableDataCollector
 
-    private val declaredVariablesForDeclaration = Maps.newHashMap<Pseudocode, Set<VariableDescriptor>>()
+    private val declaredVariablesForDeclaration = Maps.newHashMap<Pseudocode, Set<DeclarationDescriptor>>()
 
     val variableInitializers: Map<Instruction, Edges<InitControlFlowInfo>> by lazy {
         computeVariableInitializers()
@@ -46,11 +46,11 @@ class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingCon
     val blockScopeVariableInfo: BlockScopeVariableInfo
         get() = pseudocodeVariableDataCollector.blockScopeVariableInfo
 
-    fun getDeclaredVariables(pseudocode: Pseudocode, includeInsideLocalDeclarations: Boolean): Set<VariableDescriptor> {
+    fun getDeclaredVariables(pseudocode: Pseudocode, includeInsideLocalDeclarations: Boolean): Set<DeclarationDescriptor> {
         if (!includeInsideLocalDeclarations) {
             return getUpperLevelDeclaredVariables(pseudocode)
         }
-        val declaredVariables = Sets.newHashSet<VariableDescriptor>()
+        val declaredVariables = Sets.newHashSet<DeclarationDescriptor>()
         declaredVariables.addAll(getUpperLevelDeclaredVariables(pseudocode))
 
         for (localFunctionDeclarationInstruction in pseudocode.localDeclarations) {
@@ -60,7 +60,7 @@ class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingCon
         return declaredVariables
     }
 
-    private fun getUpperLevelDeclaredVariables(pseudocode: Pseudocode): Set<VariableDescriptor> {
+    private fun getUpperLevelDeclaredVariables(pseudocode: Pseudocode): Set<DeclarationDescriptor> {
         var declaredVariables = declaredVariablesForDeclaration[pseudocode]
         if (declaredVariables == null) {
             declaredVariables = computeDeclaredVariablesForPseudocode(pseudocode)
@@ -69,15 +69,14 @@ class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingCon
         return declaredVariables
     }
 
-    private fun computeDeclaredVariablesForPseudocode(pseudocode: Pseudocode): Set<VariableDescriptor> {
-        val declaredVariables = Sets.newHashSet<VariableDescriptor>()
+    private fun computeDeclaredVariablesForPseudocode(pseudocode: Pseudocode): Set<DeclarationDescriptor> {
+        val declaredVariables = Sets.newHashSet<DeclarationDescriptor>()
         for (instruction in pseudocode.instructions) {
             if (instruction is VariableDeclarationInstruction) {
                 val variableDeclarationElement = instruction.variableDeclarationElement
                 val descriptor = bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, variableDeclarationElement)
                 if (descriptor != null) {
-                    assert(descriptor is VariableDescriptor)
-                    declaredVariables.add(descriptor as VariableDescriptor?)
+                    declaredVariables.add(descriptor)
                 }
             }
         }
@@ -196,7 +195,7 @@ class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingCon
 
         @JvmStatic
         fun getDefaultValueForInitializers(
-                variable: VariableDescriptor,
+                variable: DeclarationDescriptor,
                 instruction: Instruction,
                 blockScopeVariableInfo: BlockScopeVariableInfo
         ): VariableControlFlowState {
@@ -212,7 +211,7 @@ class PseudocodeVariablesData(val pseudocode: Pseudocode, private val bindingCon
                 incomingEdgesData: Collection<InitControlFlowInfo>
         ): InitControlFlowInfo {
             if (incomingEdgesData.size == 1) return incomingEdgesData.single()
-            val variablesInScope = Sets.newHashSet<VariableDescriptor>()
+            val variablesInScope = Sets.newHashSet<DeclarationDescriptor>()
             for (edgeData in incomingEdgesData) {
                 variablesInScope.addAll(edgeData.keys)
             }

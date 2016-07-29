@@ -911,7 +911,7 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
             return info.getType() != null;
         }
 
-        VariableDescriptor variable = BindingContextUtils.extractVariableDescriptorIfAny(trace.getBindingContext(), expression, true);
+        DeclarationDescriptor declaration = BindingContextUtils.extractVariableDescriptorIfAny(trace.getBindingContext(), expression, true);
 
         boolean result = true;
         KtExpression reportOn = expression != null ? expression : expressionWithParenthesis;
@@ -921,8 +921,8 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
                 reportOn = selector;
         }
 
-        if (variable instanceof PropertyDescriptor) {
-            PropertyDescriptor propertyDescriptor = (PropertyDescriptor) variable;
+        if (declaration instanceof PropertyDescriptor) {
+            PropertyDescriptor propertyDescriptor = (PropertyDescriptor) declaration;
             PropertySetterDescriptor setter = propertyDescriptor.getSetter();
             if (propertyDescriptor.isSetterProjectedOut()) {
                 trace.report(SETTER_PROJECTED_OUT.on(reportOn, propertyDescriptor));
@@ -936,12 +936,14 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
             }
         }
 
-        if (variable == null) {
+        if (declaration == null) {
             trace.report(VARIABLE_EXPECTED.on(reportOn));
             result = false;
         }
-        else if (!variable.isVar()) {
-            result = false;
+        else if (declaration instanceof VariableDescriptor) {
+            if (!((VariableDescriptor) declaration).isVar()) {
+                result = false;
+            }
         }
 
         return result;

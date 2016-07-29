@@ -194,7 +194,7 @@ public interface BindingContext {
             return backingFieldRequired;
         }
     };
-    WritableSlice<PropertyDescriptor, Boolean> IS_UNINITIALIZED = Slices.createSimpleSetSlice();
+    WritableSlice<DeclarationDescriptor, Boolean> IS_UNINITIALIZED = Slices.createSimpleSetSlice();
 
     WritableSlice<KtLambdaExpression, Boolean> BLOCK = new SetSlice<KtLambdaExpression>(DO_NOTHING) {
         @Override

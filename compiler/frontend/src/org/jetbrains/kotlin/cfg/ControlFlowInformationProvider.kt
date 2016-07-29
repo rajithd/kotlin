@@ -253,8 +253,8 @@ class ControlFlowInformationProvider private constructor(
     //  Uninitialized variables analysis
 
     private fun markUninitializedVariables() {
-        val varWithUninitializedErrorGenerated = hashSetOf<VariableDescriptor>()
-        val varWithValReassignErrorGenerated = hashSetOf<VariableDescriptor>()
+        val varWithUninitializedErrorGenerated = hashSetOf<DeclarationDescriptor>()
+        val varWithValReassignErrorGenerated = hashSetOf<DeclarationDescriptor>()
         val processClassOrObject = subroutine is KtClassOrObject
 
         val initializers = pseudocodeVariablesData.variableInitializers
@@ -265,8 +265,8 @@ class ControlFlowInformationProvider private constructor(
 
         pseudocode.traverse(TraversalOrder.FORWARD, initializers) {
             instruction: Instruction,
-            enterData: Map<VariableDescriptor, VariableControlFlowState>,
-            exitData: Map<VariableDescriptor, VariableControlFlowState> ->
+            enterData: Map<DeclarationDescriptor, VariableControlFlowState>,
+            exitData: Map<DeclarationDescriptor, VariableControlFlowState> ->
 
             val ctxt = VariableInitContext(instruction, reportedDiagnosticMap, enterData, exitData, blockScopeVariableInfo)
             if (ctxt.variableDescriptor == null) return@traverse
@@ -311,7 +311,7 @@ class ControlFlowInformationProvider private constructor(
     private fun checkIsInitialized(
             ctxt: VariableInitContext,
             element: KtElement,
-            varWithUninitializedErrorGenerated: MutableCollection<VariableDescriptor>
+            varWithUninitializedErrorGenerated: MutableCollection<DeclarationDescriptor>
     ) {
         if (element !is KtSimpleNameExpression) return
 
@@ -327,6 +327,9 @@ class ControlFlowInformationProvider private constructor(
             when (variableDescriptor) {
                 is ValueParameterDescriptor -> report(Errors.UNINITIALIZED_PARAMETER.on(element, variableDescriptor), ctxt)
                 is VariableDescriptor -> report(Errors.UNINITIALIZED_VARIABLE.on(element, variableDescriptor), ctxt)
+                is ClassDescriptor -> if (variableDescriptor.kind == ClassKind.ENUM_ENTRY) {
+                    report(Errors.UNINITIALIZED_ENUM_ENTRY.on(element, variableDescriptor), ctxt)
+                }
             }
         }
     }
@@ -370,7 +373,7 @@ class ControlFlowInformationProvider private constructor(
             ctxt: VariableInitContext,
             expression: KtExpression,
             writeValueInstruction: WriteValueInstruction,
-            varWithValReassignErrorGenerated: MutableCollection<VariableDescriptor>
+            varWithValReassignErrorGenerated: MutableCollection<DeclarationDescriptor>
     ): Boolean {
         val variableDescriptor = ctxt.variableDescriptor
         val propertyDescriptor = variableDescriptor?.referencedProperty
@@ -404,9 +407,9 @@ class ControlFlowInformationProvider private constructor(
             }
         }
         val isThisOrNoDispatchReceiver = PseudocodeUtil.isThisOrNoDispatchReceiver(writeValueInstruction, trace.bindingContext)
-        val captured = variableDescriptor?.let { isCapturedWrite(it, writeValueInstruction) } ?: false
+        val captured = (variableDescriptor as? VariableDescriptor)?.let { isCapturedWrite(it, writeValueInstruction) } ?: false
         if ((mayBeInitializedNotHere || !hasBackingField || !isThisOrNoDispatchReceiver || captured) &&
-            variableDescriptor != null && !variableDescriptor.isVar) {
+            variableDescriptor is VariableDescriptor && !variableDescriptor.isVar) {
             var hasReassignMethodReturningUnit = false
             val parent = expression.parent
             val operationReference =
@@ -503,7 +506,8 @@ class ControlFlowInformationProvider private constructor(
         val initializers = initializersMap[pseudocode.exitInstruction] ?: return
         val declaredVariables = pseudocodeVariablesData.getDeclaredVariables(pseudocode, false)
         for (variable in declaredVariables) {
-            if (variable is PropertyDescriptor) {
+            if (variable is PropertyDescriptor ||
+                variable is ClassDescriptor && variable.kind == ClassKind.ENUM_ENTRY) {
                 if (initializers.incoming[variable]?.definitelyInitialized() ?: false) continue
                 trace.record(BindingContext.IS_UNINITIALIZED, variable)
             }
@@ -518,8 +522,8 @@ class ControlFlowInformationProvider private constructor(
         val reportedDiagnosticMap = hashMapOf<Instruction, DiagnosticFactory<*>>()
         pseudocode.traverse(TraversalOrder.BACKWARD, variableStatusData) {
             instruction: Instruction,
-            enterData: Map<VariableDescriptor, VariableUseState>,
-            exitData: Map<VariableDescriptor, VariableUseState> ->
+            enterData: Map<DeclarationDescriptor, VariableUseState>,
+            exitData: Map<DeclarationDescriptor, VariableUseState> ->
 
             val ctxt = VariableUseContext(instruction, reportedDiagnosticMap)
             val declaredVariables = pseudocodeVariablesData.getDeclaredVariables(instruction.owner, false)
@@ -533,7 +537,8 @@ class ControlFlowInformationProvider private constructor(
             val variableUseState = enterData[variableDescriptor]
             when (instruction) {
                 is WriteValueInstruction -> {
-                    if (trace.get(CAPTURED_IN_CLOSURE, variableDescriptor) != null) return@traverse
+                    if (variableDescriptor is VariableDescriptor &&
+                        trace.get(CAPTURED_IN_CLOSURE, variableDescriptor) != null) return@traverse
                     if (variableUseState !== READ) {
                         val element = instruction.element
                         when (element) {
@@ -555,13 +560,14 @@ class ControlFlowInformationProvider private constructor(
                     val element = instruction.variableDeclarationElement as? KtNamedDeclaration ?: return@traverse
                     element.nameIdentifier ?: return@traverse
                     if (!VariableUseState.isUsed(variableUseState)) {
-                        if (KtPsiUtil.isVariableNotParameterDeclaration(element)) {
+                        if (variableDescriptor is VariableDescriptor &&
+                            KtPsiUtil.isVariableNotParameterDeclaration(element)) {
                             report(Errors.UNUSED_VARIABLE.on(element, variableDescriptor), ctxt)
                         }
                         else if (element is KtParameter) {
                             val owner = element.parent?.parent
                             when (owner) {
-                                is KtPrimaryConstructor -> if (!element.hasValOrVar()) {
+                                is KtPrimaryConstructor -> if (variableDescriptor is VariableDescriptor && !element.hasValOrVar()) {
                                     val containingClass = owner.getContainingClassOrObject()
                                     val containingClassDescriptor = trace.get(
                                             BindingContext.DECLARATION_TO_DESCRIPTOR, containingClass)
@@ -585,12 +591,16 @@ class ControlFlowInformationProvider private constructor(
                                         || "propertyDelegated" == functionName) {
                                         return@traverse
                                     }
-                                    report(Errors.UNUSED_PARAMETER.on(element, variableDescriptor), ctxt)
+                                    if (variableDescriptor is VariableDescriptor) {
+                                        report(Errors.UNUSED_PARAMETER.on(element, variableDescriptor), ctxt)
+                                    }
                                 }
                             }
                         }
                     }
-                    else if (variableUseState === ONLY_WRITTEN_NEVER_READ && KtPsiUtil.isVariableNotParameterDeclaration(element)) {
+                    else if (variableUseState === ONLY_WRITTEN_NEVER_READ &&
+                             variableDescriptor is VariableDescriptor &&
+                             KtPsiUtil.isVariableNotParameterDeclaration(element)) {
                         report(Errors.ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE.on(element, variableDescriptor), ctxt)
                     }
                     else if (variableUseState === WRITTEN_AFTER_READ && element is KtVariableDeclaration) {
@@ -873,17 +883,17 @@ class ControlFlowInformationProvider private constructor(
     private inner class VariableInitContext(
             instruction: Instruction,
             map: MutableMap<Instruction, DiagnosticFactory<*>>,
-            `in`: Map<VariableDescriptor, VariableControlFlowState>,
-            out: Map<VariableDescriptor, VariableControlFlowState>,
+            `in`: Map<DeclarationDescriptor, VariableControlFlowState>,
+            out: Map<DeclarationDescriptor, VariableControlFlowState>,
             blockScopeVariableInfo: BlockScopeVariableInfo
     ) : VariableContext(instruction, map) {
         internal val enterInitState = initialize(variableDescriptor, blockScopeVariableInfo, `in`)
         internal val exitInitState = initialize(variableDescriptor, blockScopeVariableInfo, out)
 
         private fun initialize(
-                variableDescriptor: VariableDescriptor?,
+                variableDescriptor: DeclarationDescriptor?,
                 blockScopeVariableInfo: BlockScopeVariableInfo,
-                map: Map<VariableDescriptor, VariableControlFlowState>
+                map: Map<DeclarationDescriptor, VariableControlFlowState>
         ): VariableControlFlowState? {
             val state = map[variableDescriptor ?: return null]
             if (state != null) return state

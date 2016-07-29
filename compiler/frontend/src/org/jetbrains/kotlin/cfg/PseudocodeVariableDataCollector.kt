@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.cfg.pseudocodeTraverser.Edges
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.TraversalOrder
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.collectData
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.traverse
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.util.ArrayList
 import java.util.HashMap
@@ -76,15 +76,8 @@ class PseudocodeVariableDataCollector(
                 val variableDeclarationElement = instruction.variableDeclarationElement
                 val descriptor = bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, variableDeclarationElement)
                 if (descriptor != null) {
-                    // TODO: investigate why tests fail without this eager computation here
-                    descriptor.toString()
-
-                    assert(descriptor is VariableDescriptor) {
-                        "Variable descriptor should correspond to the instruction for ${instruction.element.text}.\n" +
-                        "Descriptor: $descriptor"
-                    }
                     blockScopeVariableInfo.registerVariableDeclaredInScope(
-                            descriptor as VariableDescriptor, instruction.blockScope
+                            descriptor, instruction.blockScope
                     )
                 }
             }
@@ -94,17 +87,17 @@ class PseudocodeVariableDataCollector(
 }
 
 interface BlockScopeVariableInfo {
-    val declaredIn : Map<VariableDescriptor, BlockScope>
-    val scopeVariables : Map<BlockScope, Collection<VariableDescriptor>>
+    val declaredIn : Map<DeclarationDescriptor, BlockScope>
+    val scopeVariables : Map<BlockScope, Collection<DeclarationDescriptor>>
 }
 
 class BlockScopeVariableInfoImpl : BlockScopeVariableInfo {
-    override val declaredIn = HashMap<VariableDescriptor, BlockScope>()
-    override val scopeVariables = HashMap<BlockScope, MutableCollection<VariableDescriptor>>()
+    override val declaredIn = HashMap<DeclarationDescriptor, BlockScope>()
+    override val scopeVariables = HashMap<BlockScope, MutableCollection<DeclarationDescriptor>>()
 
-    fun registerVariableDeclaredInScope(variable: VariableDescriptor, blockScope: BlockScope) {
+    fun registerVariableDeclaredInScope(variable: DeclarationDescriptor, blockScope: BlockScope) {
         declaredIn[variable] = blockScope
-        val variablesInScope = scopeVariables.getOrPut(blockScope, { ArrayList<VariableDescriptor>() })
+        val variablesInScope = scopeVariables.getOrPut(blockScope, { ArrayList<DeclarationDescriptor>() })
         variablesInScope.add(variable)
     }
 }

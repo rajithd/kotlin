@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.cfg.pseudocode.PseudocodeImpl;
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.Instruction;
 import org.jetbrains.kotlin.cfg.pseudocodeTraverser.Edges;
-import org.jetbrains.kotlin.descriptors.VariableDescriptor;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.resolve.BindingContext;
 
 import java.util.Collections;
@@ -93,10 +93,10 @@ public abstract class AbstractDataFlowTest extends AbstractPseudocodeTest {
                " out: " + renderVariableMap(edges.getOutgoing());
     }
 
-    private static <S> String renderVariableMap(Map<VariableDescriptor, S> map) {
+    private static <S> String renderVariableMap(Map<DeclarationDescriptor, S> map) {
         List<String> result = Lists.newArrayList();
-        for (Map.Entry<VariableDescriptor, S> entry : map.entrySet()) {
-            VariableDescriptor variable = entry.getKey();
+        for (Map.Entry<DeclarationDescriptor, S> entry : map.entrySet()) {
+            DeclarationDescriptor variable = entry.getKey();
             S state = entry.getValue();
             result.add(variable.getName() + "=" + state);
         }

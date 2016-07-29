@@ -19,14 +19,14 @@ package org.jetbrains.kotlin.cfg.pseudocode.instructions.eval
 import org.jetbrains.kotlin.cfg.pseudocode.PseudoValue
 import org.jetbrains.kotlin.cfg.pseudocode.PseudoValueFactory
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.*
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
 
 sealed class AccessTarget {
-    class Declaration(val descriptor: VariableDescriptor): AccessTarget() {
+    class Declaration(val descriptor: DeclarationDescriptor): AccessTarget() {
         override fun equals(other: Any?) = other is Declaration && descriptor == other.descriptor
 
         override fun hashCode() = descriptor.hashCode()

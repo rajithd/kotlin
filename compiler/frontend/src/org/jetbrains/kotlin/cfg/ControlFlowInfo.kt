@@ -16,14 +16,14 @@
 
 package org.jetbrains.kotlin.cfg
 
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import java.util.*
 
-open class ControlFlowInfo<D> internal constructor(protected val map: MutableMap<VariableDescriptor, D> = hashMapOf()) :
-        MutableMap<VariableDescriptor, D> by map {
+open class ControlFlowInfo<D> internal constructor(protected val map: MutableMap<DeclarationDescriptor, D> = hashMapOf()) :
+        MutableMap<DeclarationDescriptor, D> by map {
     open fun copy() = ControlFlowInfo(HashMap(map))
 
-    fun retainAll(predicate: (VariableDescriptor) -> Boolean): ControlFlowInfo<D> {
+    fun retainAll(predicate: (DeclarationDescriptor) -> Boolean): ControlFlowInfo<D> {
         map.keys.retainAll(predicate)
         return this
     }
@@ -35,7 +35,7 @@ open class ControlFlowInfo<D> internal constructor(protected val map: MutableMap
     override fun toString() = map.toString()
 }
 
-class InitControlFlowInfo(map: MutableMap<VariableDescriptor, VariableControlFlowState> = hashMapOf()) :
+class InitControlFlowInfo(map: MutableMap<DeclarationDescriptor, VariableControlFlowState> = hashMapOf()) :
         ControlFlowInfo<VariableControlFlowState>(map) {
     override fun copy() = InitControlFlowInfo(HashMap(map))
 
@@ -53,7 +53,7 @@ class InitControlFlowInfo(map: MutableMap<VariableDescriptor, VariableControlFlo
     }
 }
 
-class UseControlFlowInfo(map: MutableMap<VariableDescriptor, VariableUseState> = hashMapOf()) :
+class UseControlFlowInfo(map: MutableMap<DeclarationDescriptor, VariableUseState> = hashMapOf()) :
         ControlFlowInfo<VariableUseState>(map) {
     override fun copy() = UseControlFlowInfo(HashMap(map))
 }
