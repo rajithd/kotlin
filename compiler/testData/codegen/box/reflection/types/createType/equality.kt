@@ -26,8 +26,7 @@ fun box(): String {
             Foo::class.createType(listOf(KTypeProjection.Out(i)))
     )
 
-    // Currently, Foo<*> == Foo<out Any?>
-    assertEquals(
+    assertNotEquals(
             Foo::class.createType(listOf(KTypeProjection.Out(Any::class.createType(nullable = true)))),
             Foo::class.createType(listOf(KTypeProjection.Star))
     )
