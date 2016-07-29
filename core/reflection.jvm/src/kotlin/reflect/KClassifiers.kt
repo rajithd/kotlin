@@ -65,17 +65,12 @@ private fun createKotlinType(
 ): SimpleType {
     val parameters = typeConstructor.parameters
     return KotlinTypeFactory.simpleType(typeAnnotations, typeConstructor, arguments.mapIndexed { index, typeProjection ->
-        if (typeProjection is KTypeProjection.Star) {
-            StarProjectionImpl(parameters[index])
-        }
-        else {
-            val type = (typeProjection.type as KTypeImpl).type
-            when (typeProjection) {
-                is KTypeProjection.Invariant -> TypeProjectionImpl(Variance.INVARIANT, type)
-                is KTypeProjection.In -> TypeProjectionImpl(Variance.IN_VARIANCE, type)
-                is KTypeProjection.Out -> TypeProjectionImpl(Variance.OUT_VARIANCE, type)
-                is KTypeProjection.Star -> error("Unreachable")
-            }
+        val type = (typeProjection.type as KTypeImpl?)?.type
+        when (typeProjection) {
+            is KTypeProjection.Invariant -> TypeProjectionImpl(Variance.INVARIANT, type!!)
+            is KTypeProjection.In -> TypeProjectionImpl(Variance.IN_VARIANCE, type!!)
+            is KTypeProjection.Out -> TypeProjectionImpl(Variance.OUT_VARIANCE, type!!)
+            is KTypeProjection.Star -> StarProjectionImpl(parameters[index])
         }
     }, nullable)
 }
