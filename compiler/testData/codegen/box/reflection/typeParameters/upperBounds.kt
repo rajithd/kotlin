@@ -7,6 +7,7 @@ import kotlin.test.assertTrue
 class DefaultBound<T>
 class NullableAnyBound<T : Any?>
 class NotNullAnyBound<T : Any>
+class TwoBounds<T : Cloneable> where T : Comparable<T>
 
 class OtherParameterBound<T : U, U : Number>
 
@@ -25,6 +26,17 @@ fun box(): String {
     assertEquals(listOf(::nullableAny.returnType), NullableAnyBound::class.typeParameters.single().upperBounds)
     assertEquals(listOf(::notNullAny.returnType), NotNullAnyBound::class.typeParameters.single().upperBounds)
 
+    TwoBounds::class.typeParameters.single().let {
+        val (cl, cm) = it.upperBounds
+        assertEquals(Cloneable::class, cl.classifier)
+        assertEquals(listOf(), cl.arguments)
+
+        assertEquals(Comparable::class, cm.classifier)
+        val cmt = cm.arguments.single()
+        assertTrue(cmt is KTypeProjection.Invariant)
+        assertEquals(it, cmt.type!!.classifier)
+    }
+
     OtherParameterBound::class.typeParameters.let {
         val (t, u) = it
         assertEquals(u, t.upperBounds.single().classifier)
@@ -40,8 +52,7 @@ fun box(): String {
     assertEquals(Enum::class, recursiveGenericBound.classifier)
     recursiveGenericBound.arguments.single().let { projection ->
         assertTrue(projection is KTypeProjection.Invariant)
-        val type = projection.type!!
-        assertEquals(recursiveGenericTypeParameter, type.classifier)
+        assertEquals(recursiveGenericTypeParameter, projection.type!!.classifier)
     }
 
     return "OK"
