@@ -247,8 +247,11 @@ fun KClass<*>.isSuperclassOf(derived: KClass<*>): Boolean =
 
 
 /**
- * Performs an unchecked cast of the given [value] to this class and either returns the value if the cast is successful,
- * or throws an exception otherwise.
+ * Casts the given [value] to the class represented by this [KClass] object.
+ * Throws an exception if the value is `null` or if it is not an instance of this class.
+ *
+ * @see [KClass.isInstance]
+ * @see [KClass.safeCast]
  */
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> KClass<T>.cast(value: Any?): T {
@@ -257,8 +260,11 @@ fun <T : Any> KClass<T>.cast(value: Any?): T {
 }
 
 /**
- * Performs an unchecked cast of the given [value] to this class and returns either the value if the cast is successful,
- * or `null` otherwise.
+ * Casts the given [value] to the class represented by this [KClass] object.
+ * Returns `null` if the value is `null` or if it is not an instance of this class.
+ *
+ * @see [KClass.isInstance]
+ * @see [KClass.cast]
  */
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> KClass<T>.safeCast(value: Any?): T? {
