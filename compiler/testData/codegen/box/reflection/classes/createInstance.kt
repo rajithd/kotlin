@@ -35,6 +35,8 @@ class SeveralDefaultSecondaries {
     constructor(s: String = "") {}
     constructor(d: Double = 3.14) {}
 }
+class PrivateConstructor private constructor()
+object Object
 
 // -----------
 
@@ -64,6 +66,8 @@ fun box(): String {
     testFail<NoArgAndDefault>()
     testFail<DefaultPrimaryAndDefaultSecondary>()
     testFail<SeveralDefaultSecondaries>()
+    testFail<PrivateConstructor>()
+    testFail<Object>()
 
     return "OK"
 }
