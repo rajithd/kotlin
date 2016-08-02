@@ -16,6 +16,5 @@
     <orderEntry type="library" scope="PROVIDED" name="butterknife" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="dagger" level="project" />
     <orderEntry type="module" module-name="util" />
-    <orderEntry type="module" module-name="cli" />
   </component>
 </module>
