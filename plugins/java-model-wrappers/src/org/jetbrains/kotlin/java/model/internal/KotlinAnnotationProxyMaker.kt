@@ -17,7 +17,7 @@
 package org.jetbrains.kotlin.java.model.internal
 
 import com.intellij.psi.*
-import org.jetbrains.kotlin.asJava.KtLightAnnotation
+import org.jetbrains.kotlin.asJava.elements.KtLightAnnotation
 import org.jetbrains.kotlin.java.model.types.toJeType
 import sun.reflect.annotation.AnnotationParser
 import sun.reflect.annotation.ExceptionProxy
