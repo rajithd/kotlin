@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.kotlin.annotation.processing.test
+package org.jetbrains.kotlin.annotation.processing.test.wrappers
 
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.java.model.elements.DefaultJeElementRenderer
