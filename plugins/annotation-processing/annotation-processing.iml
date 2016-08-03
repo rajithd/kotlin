@@ -8,7 +8,6 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="java-model-wrappers" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="module" module-name="frontend" />
@@ -17,5 +16,6 @@
     <orderEntry type="library" scope="PROVIDED" name="butterknife" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="dagger" level="project" />
     <orderEntry type="module" module-name="util" />
+    <orderEntry type="library" name="kotlin-runtime" level="project" />
   </component>
 </module>
